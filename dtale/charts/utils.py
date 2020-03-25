@@ -256,7 +256,7 @@ def build_agg_data(df, x, y, inputs, agg, z=None):
     groups = df.groupby(x)
     return getattr(groups[y], agg)().reset_index(), [
         "chart_data = chart_data.groupby('{x}')[['{y}']].{agg}().reset_index()".format(
-            x=x, y=y, agg=agg
+            x=x, y="', '".join(make_list(y)), agg=agg
         )
     ]
 
@@ -306,25 +306,34 @@ def build_chart(raw_data, x, y, group_col=None, agg=None, allow_duplicates=False
         max_groups = 30
         group_vals = data[group_col].drop_duplicates()
         if len(group_vals) > max_groups:
-            dtypes = get_dtypes(group_vals)
-            group_fmt_overrides = {'I': lambda v, as_string: json_int(v, as_string=as_string, fmt='{}')}
-            group_fmts = {c: find_dtype_formatter(dtypes[c], overrides=group_fmt_overrides) for c in group_col}
-
-            def _group_filter():
-                for gv, gc in zip(group_vals.values[0], group_col):
-                    classifier = classify_type(dtypes[gc])
-                    yield group_filter_handler(gc, group_fmts[gc](gv, as_string=True), classifier)
-            group_filter = ' and '.join(list(_group_filter()))
-
-            group_f, _ = build_formatters(group_vals)
-            group_vals = group_f.format_lists(group_vals)
-            group_vals = pd.DataFrame(group_vals, columns=group_col)
-            msg = (
-                'Group ({}) contains more than {} unique values, please add additional filtering'
-                ' or else chart will be unreadable. Additional filtering can be added above, for example:\n\n'
-                '{}\n\nHere are the values to choose from:\n\n{}'
-            ).format(', '.join(group_col), max_groups, group_filter, group_vals.to_string(index=False))
-            raise Exception(msg)
+            y_axis = y_cols[0]
+            categories = getattr(data.groupby(group_col), agg)().sort_values(y_axis)
+            min_categories = categories[:(max_groups / 2)].index
+            max_categories = categories[:-(max_groups / 2)].index
+            data = data.set_index(group_col)
+            data = data[data.index.isin(min_categories) | data.index.isin(max_categories)]
+            data = data.reset_index()
+            # chart_df = data[group_col].replace(other_categories, 'Other')\
+            #     .join( data[[c for c in data.columns if c != groupby]])
+            # dtypes = get_dtypes(group_vals)
+            # group_fmt_overrides = {'I': lambda v, as_string: json_int(v, as_string=as_string, fmt='{}')}
+            # group_fmts = {c: find_dtype_formatter(dtypes[c], overrides=group_fmt_overrides) for c in group_col}
+            #
+            # def _group_filter():
+            #     for gv, gc in zip(group_vals.values[0], group_col):
+            #         classifier = classify_type(dtypes[gc])
+            #         yield group_filter_handler(gc, group_fmts[gc](gv, as_string=True), classifier)
+            # group_filter = ' and '.join(list(_group_filter()))
+            #
+            # group_f, _ = build_formatters(group_vals)
+            # group_vals = group_f.format_lists(group_vals)
+            # group_vals = pd.DataFrame(group_vals, columns=group_col)
+            # msg = (
+            #     'Group ({}) contains more than {} unique values, please add additional filtering'
+            #     ' or else chart will be unreadable. Additional filtering can be added above, for example:\n\n'
+            #     '{}\n\nHere are the values to choose from:\n\n{}'
+            # ).format(', '.join(group_col), max_groups, group_filter, group_vals.to_string(index=False))
+            # raise Exception(msg)
 
         data = data.dropna()
         if return_raw:
