@@ -126,11 +126,16 @@ class ReactColumnMenu extends React.Component {
       };
       serverState.toggleVisibility(dataId, selectedCol, hideCallback);
     };
-    const deleteCol = () =>
-      this.props.propagateState(
-        { columns: _.reject(this.props.columns, { name: selectedCol }) },
-        serverState.deleteColumn(dataId, selectedCol)
-      );
+    const deleteCol = () => {
+      const yesAction = () =>
+        this.props.propagateState(
+          { columns: _.reject(this.props.columns, { name: selectedCol }) },
+          serverState.deleteColumn(dataId, selectedCol)
+        );
+      const msg = `Are you sure you want to delete the column "${selectedCol}"?`;
+      const title = `Delete column - ${selectedCol}`;
+      openChart({ type: "confirm", title, msg, yesAction, size: "modal-sm" });
+    };
     return (
       <div
         id="column-menu-div"

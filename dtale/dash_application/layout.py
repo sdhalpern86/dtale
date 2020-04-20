@@ -172,9 +172,10 @@ CHART_INPUT_SETTINGS = {
                  map_group=dict(display=True)),
 }
 AGGS = dict(
-    count='Count', nunique='Unique Count', sum='Sum', mean='Mean', rolling='Rolling', corr='Correlation', first='First',
-    last='Last', median='Median', min='Minimum', max='Maximum', std='Standard Deviation', var='Variance',
-    mad='Mean Absolute Deviation', prod='Product of All Items', raw='No Aggregation'
+    raw='No Aggregation', count='Count', nunique='Unique Count', sum='Sum', mean='Mean', rolling='Rolling',
+    corr='Correlation', first='First', last='Last', median='Median', min='Minimum', max='Maximum',
+    std='Standard Deviation', var='Variance', mad='Mean Absolute Deviation', prod='Product of All Items',
+    pctct='Percentage Count', pctsum='Percentage Sum'
 )
 FREQS = ['H', 'H2', 'WD', 'D', 'W', 'M', 'Q', 'Y']
 FREQ_LABELS = dict(H='Hourly', H2='Hour', WD='Weekday', W='Weekly', M='Monthly', Q='Quarterly', Y='Yearly')
@@ -313,7 +314,7 @@ def build_error(error, tb):
 
     :param error: execption message
     :type error: str
-    :param tb: traceback
+    :param tb: tracebackF
     :type tb: str
     :return: error component
     :rtype: :dash:`dash_html_components.Div <dash-html-components/div>`
@@ -636,7 +637,7 @@ def charts_layout(df, settings, **inputs):
                         )
                     ],
                     id='non-map-inputs', style={} if not show_map else {'display': 'none'},
-                    className='row pt-3 pb-3 charts-filters'
+                    className='row p-0 charts-filters'
                 ),
                 html.Div(
                     [
@@ -748,9 +749,9 @@ def charts_layout(df, settings, **inputs):
                 html.Div([
                     build_input('Aggregation', dcc.Dropdown(
                         id='agg-dropdown',
-                        options=[build_option(v, AGGS[v]) for v in ['count', 'nunique', 'sum', 'mean', 'rolling',
+                        options=[build_option(v, AGGS[v]) for v in ['raw', 'count', 'nunique', 'sum', 'mean', 'rolling',
                                                                     'corr', 'first', 'last', 'median', 'min', 'max',
-                                                                    'std', 'var', 'mad', 'prod', 'raw']],
+                                                                    'std', 'var', 'mad', 'prod', 'pctsum', 'pctct']],
                         placeholder='Select an aggregation',
                         style=dict(width='inherit'),
                         value=agg or 'raw',
@@ -849,7 +850,7 @@ def charts_layout(df, settings, **inputs):
                             value=inputs.get('animate_by')
                         ), className='col-auto addon-min-width', style=animate_style, id='animate-by-input'),
                     ],
-                    className='row pt-3 pb-5 charts-filters'
+                    className='row pt-3 pb-5 charts-filters', id='chart-inputs'
                 )],
                 id='main-inputs', className=main_input_class
             ), build_input('Group(s)', dcc.Dropdown(

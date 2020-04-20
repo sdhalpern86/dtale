@@ -8,6 +8,7 @@ import ConditionalRender from "../ConditionalRender";
 import { closeChart } from "../actions/charts";
 import About from "./About";
 import { CodeExport } from "./CodeExport";
+import { Confirmation } from "./Confirmation";
 import { Correlations } from "./Correlations";
 import { Describe } from "./Describe";
 import { Filter } from "./Filter";
@@ -102,6 +103,16 @@ class ReactPopup extends React.Component {
           </ModalTitle>
         );
         body = <About />;
+        break;
+      case "confirm":
+        modalTitle = (
+          <ModalTitle>
+            <i className="ico-check-circle" />
+            <strong>Yes/No</strong>
+            <small className="pl-3">({chartData.title})</small>
+          </ModalTitle>
+        );
+        body = <Confirmation />;
         break;
       case "instances":
         modalTitle = (
